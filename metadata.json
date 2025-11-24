@@ -1,0 +1,5 @@
+{
+  "name": "MarketMind AI",
+  "description": "A real-time stock market tracking dashboard featuring an AI investment assistant powered by Gemini 2.5 Flash with live market research capabilities.",
+  "requestFramePermissions": []
+}
