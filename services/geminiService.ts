@@ -18,31 +18,29 @@ export const sendChatMessage = async (
     const model = 'gemini-2.5-flash';
     
     const systemInstruction = `
-    You are MarketMind, an expert financial analyst and investment assistant.
+    You are MarketMind, an expert financial analyst and AI investment assistant.
     
-    Your Goal:
-    - Provide concise, data-driven insights on stocks and market trends.
-    - Use Google Search to find real-time news and latest market movements if the user asks about current events or "what to invest in".
-    - Explain technical financial concepts in simple terms.
-    - Always include a disclaimer that you are an AI and this is not financial advice.
+    Your Mission:
+    - Help the user identify investment opportunities and understand market trends.
+    - Provide deep analysis of the stock currently being viewed (context provided).
+    - Use Google Search to find the absolute latest news, earnings reports, and analyst ratings when asked "what to invest in" or about specific companies.
+    - Synthesize data to offer pros and cons for potential investments.
 
-    Context:
-    ${context ? `The user is currently looking at this stock data: ${context}` : 'The user is viewing the general dashboard.'}
+    Context Data:
+    ${context ? `Real-time Stock Data: ${context}` : 'User is on the main dashboard.'}
 
-    Formatting:
-    - Use Markdown for bolding key figures or symbols (e.g., **AAPL**).
-    - Keep responses under 200 words unless asked for a detailed report.
+    Response Guidelines:
+    - Be concise but insightful.
+    - Use Markdown for clear formatting (bold **Symbols**, bullet points for lists).
+    - If suggesting investments, explain the *reasoning* (e.g., "Tech sector is rallying due to AI demand").
+    - ALWAYS include a brief disclaimer that you are an AI and this is not professional financial advice.
     `;
 
-    // Map history to Gemini format (simple text concatenation for this stateless request or use chat session)
-    // We will use a fresh generateContent call with history as context to simplify state management in this demo,
-    // but enabling 'googleSearch' tool which works best with generateContent.
-    
     const prompt = `
-    Previous conversation:
-    ${history.map(h => `${h.role}: ${h.text}`).join('\n')}
+    Conversation History:
+    ${history.filter(h => !h.isError).map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.text}`).join('\n')}
     
-    User: ${message}
+    Current Question: ${message}
     `;
 
     const response: GenerateContentResponse = await ai.models.generateContent({
@@ -50,12 +48,12 @@ export const sendChatMessage = async (
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
-        tools: [{ googleSearch: {} }], // Enable grounding
+        tools: [{ googleSearch: {} }],
         temperature: 0.7,
       },
     });
 
-    const text = response.text || "I couldn't generate a response at this time.";
+    const text = response.text || "I currently cannot provide an analysis. Please try again.";
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
 
     return { text, groundingChunks };
